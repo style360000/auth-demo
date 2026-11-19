@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>软件授权平台 Demo</title>
+<style>
+:root{--bg:#0b1020;--card:#151b31;--line:#252c47;--tx:#e8ecf8;--mut:#8a93b2;--pri:#4f7cff;--ok:#2ecc8f;--warn:#ffb547;--err:#ff5f6d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--tx);min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);background:rgba(21,27,49,.7);position:sticky;top:0;backdrop-filter:blur(8px);z-index:9}
+.brand{font-weight:700;font-size:17px;display:flex;gap:9px;align-items:center}
+.brand i{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--pri),#9b5cff);display:block}
+main{max-width:1040px;margin:0 auto;padding:28px 20px 64px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
+h2{font-size:16px;margin-bottom:4px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:18px}
+label{display:block;font-size:13px;color:var(--mut);margin:14px 0 6px}
+input,select,textarea{width:100%;padding:11px 13px;background:#0e1428;border:1px solid var(--line);border-radius:9px;color:var(--tx);font-size:14px;outline:none}
+input:focus,textarea:focus{border-color:var(--pri)}
+textarea{resize:vertical;min-height:76px;font-family:inherit;line-height:1.6}
+button{padding:11px 16px;border:0;border-radius:9px;background:var(--pri);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+button:hover{filter:brightness(1.12)}
+button.gh{background:transparent;border:1px solid var(--line);color:var(--tx);font-weight:500}
+button.sm{padding:6px 11px;font-size:12.5px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tabs button{flex:1;background:#0e1428;border:1px solid var(--line);color:var(--mut)}
+.tabs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.kv:last-child{border:0}
+.kv b{color:var(--mut);font-weight:500}
+.key{font-family:ui-monospace,Consolas,monospace;background:#0e1428;padding:9px 12px;border-radius:8px;border:1px solid var(--line);word-break:break-all;font-size:13px}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.tag.basic{background:rgba(138,147,178,.18);color:#a8b1cc}
+.tag.pro{background:rgba(79,124,255,.18);color:#8faaff}
+.msg{margin-top:14px;padding:11px 13px;border-radius:9px;font-size:13.5px;display:none}
+.msg.show{display:block}
+.msg.err{background:rgba(255,95,109,.12);color:#ff8a94;border:1px solid rgba(255,95,109,.3)}
+.msg.ok{background:rgba(46,204,143,.12);color:#5fdcae;border:1px solid rgba(46,204,143,.3)}
+.msg.warn{background:rgba(255,184,76,.12);color:#ffc76b;border:1px solid rgba(255,184,76,.35)}
+.bar{height:7px;background:#0e1428;border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),#9b5cff)}
+ul.dev{list-style:none}
+ul.dev li{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+ul.dev li:last-child{border:0}
+.feat{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.feat span{font-size:12px;padding:4px 9px;border-radius:6px;background:#0e1428;border:1px solid var(--line)}
+.feat span.on{color:#5fdcae;border-color:rgba(46,204,143,.35)}
+.feat span.off{color:#666f8d;text-decoration:line-through}
+.plan{border:1px solid var(--line);border-radius:12px;padding:18px;background:#0e1428}
+.plan.cur{border-color:var(--pri);box-shadow:0 0 0 1px var(--pri) inset}
+.price{font-size:24px;font-weight:700;margin:8px 0}
+.hide{display:none!important}
+.foot{text-align:center;color:#4d5675;font-size:12.5px;margin-top:26px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><i></i>授权平台 Demo</div>
+  <div id="hright" class="hide"><span id="havatar" style="margin-right:8px;display:inline-flex;vertical-align:middle"></span><span id="huser" style="color:var(--mut);font-size:13.5px;margin-right:12px"></span><button class="gh sm" onclick="logout()">退出</button></div>
+</header>
+
+<main>
+<!-- ===== 认证区 ===== -->
+<section id="auth">
+<div class="card" style="max-width:460px;margin:36px auto">
+  <div class="tabs">
+    <button id="tb1" class="on" onclick="mode('reg')">注册</button>
+    <button id="tb2" onclick="mode('log')">登录</button>
+  </div>
+
+  <div id="regForm">
+    <h2>创建账号</h2><p class="sub">账号即平台内唯一 ID，邮箱或手机号用于接收验证码</p>
+    <label>登录账号 *</label><input id="r_account" placeholder="3–32 位字母数字下划线" autocomplete="off">
+    <label>密码 *</label><input id="r_pwd" type="password" placeholder="至少 8 位，含字母与数字">
+    <label>邮箱 或 手机号 *</label>
+    <div class="row"><input id="r_target" placeholder="you@mail.com 或 13800138000"><button class="gh sm" id="r_send" onclick="sendCode('register','r_target','r_code')" style="white-space:nowrap">获取验证码</button></div>
+    <label>验证码 *</label><input id="r_code" placeholder="6 位数字" maxlength="6">
+    <div class="row" style="margin-top:16px"><button style="flex:1" onclick="doRegister()">注册并登录</button></div>
+  </div>
+
+  <div id="logForm" class="hide">
+    <h2>登录</h2><p class="sub">支持「账号/邮箱/手机号 + 密码」或「邮箱/手机号 + 验证码」</p>
+    <label>账号 / 邮箱 / 手机号 *</label><input id="l_id" autocomplete="off">
+    <label>密码</label><input id="l_pwd" type="password" placeholder="用验证码登录可留空">
+    <label>或 验证码</label>
+    <div class="row"><input id="l_code" placeholder="6 位数字" maxlength="6"><button class="gh sm" id="l_send" onclick="sendCode('login','l_id','l_code')" style="white-space:nowrap">获取验证码</button></div>
+    <div class="row" style="margin-top:16px"><button style="flex:1" onclick="doLogin()">登录</button></div>
+  </div>
+  <div id="authMsg" class="msg"></div>
+</div>
+</section>
+
+<!-- ===== 控制台 ===== -->
+<section id="app" class="hide">
+  <div class="card">
+    <h2>账户信息</h2><p class="sub">用户 ID 为平台内部主键，可用于工单与对账</p>
+    <div class="row" style="align-items:center;margin-bottom:16px">
+      <span id="u_avatar"></span>
+      <button class="gh sm" onclick="openAvatar()">更换头像</button>
+    </div>
+    <div class="grid">
+      <div>
+        <div class="kv"><b>用户 ID</b><span id="u_id" style="font-family:monospace;font-size:12px"></span></div>
+        <div class="kv"><b>登录账号</b><span id="u_acc"></span></div>
+      </div>
+      <div>
+        <div class="kv"><b>注册邮箱</b><span id="u_email">未绑定</span></div>
+        <div class="kv"><b>注册手机号</b><span id="u_phone">未绑定</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hide" id="avatarPanel">
+    <h2>更换头像</h2><p class="sub">选择预设，或上传自己的图片</p>
+    <div class="row" id="presetList" style="gap:12px;margin-bottom:14px"></div>
+    <div class="row" style="gap:10px">
+      <button class="gh sm" onclick="pickUpload()">上传图片</button>
+      <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="onAvatarFile(this)">
+      <button class="sm" onclick="saveAvatar()">保存</button>
+      <button class="gh sm" onclick="$('avatarPanel').classList.add('hide')">取消</button>
+    </div>
+    <div id="avatarMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>我的备忘录</h2><p class="sub">仅自己可见，不同账号互不可见</p>
+    <input id="m_title" placeholder="标题（可留空）" maxlength="100" autocomplete="off">
+    <textarea id="m_content" placeholder="写点什么…" rows="3" maxlength="5000"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button id="m_save" style="flex:1" onclick="saveMemo()">保存</button>
+      <button class="gh" id="m_cancel" onclick="cancelEdit()" style="display:none">取消编辑</button>
+    </div>
+    <div id="memoMsg" class="msg"></div>
+    <ul class="dev" id="memoList" style="margin-top:14px"></ul>
+  </div>
+
+  <div class="card">
+    <h2>软件授权 <span id="planTag" class="tag basic"></span></h2>
+    <p class="sub">客户端凭此授权密钥激活，席位由版本决定</p>
+    <div class="key" id="licKey">—</div>
+    <div class="row" style="margin-top:10px"><button class="gh sm" onclick="copyKey()">复制密钥</button></div>
+    <div class="kv" style="margin-top:16px"><b>已用设备 / 席位上限</b><span id="seatTxt"></span></div>
+    <div class="bar"><i id="seatBar" style="width:0%"></i></div>
+    <label>功能权限</label><div class="feat" id="featList"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>版本对比与升级</h2><p class="sub">付费后由支付回调自动开通，无需人工介入</p>
+      <div class="plan" id="planBasic" style="margin-bottom:12px">
+        <b>普通版</b><div class="price">免费</div>
+        <div style="color:var(--mut);font-size:13px">1 台设备 · 核心编辑 · PNG 导出</div>
+      </div>
+      <div class="plan" id="planPro">
+        <b>专业版</b><div class="price">$19<span style="font-size:13px;color:var(--mut)"> /月</span></div>
+        <div style="color:var(--mut);font-size:13px">3 台设备 · 批量渲染 · API 接入 · 优先支持</div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button id="btnUp" style="flex:1" onclick="upgrade()">升级专业版</button>
+        <button class="gh hide" id="btnMock" onclick="mockPay()">模拟付款</button>
+      </div>
+      <div id="upMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>设备激活</h2><p class="sub">本机设备 ID：<span id="devId" style="font-family:monospace;font-size:12px"></span></p>
+      <ul class="dev" id="devList"></ul>
+      <div class="row" style="margin-top:14px">
+        <button class="sm" style="flex:1" onclick="actDevice('activate')">激活本机</button>
+        <button class="gh sm" onclick="actDevice('verify')">校验授权</button>
+        <button class="gh sm" onclick="actDevice('deactivate')">解绑本机</button>
+      </div>
+      <div id="devMsg" class="msg"></div>
+    </div>
+  </div>
+</section>
+
+<p class="foot">Cloudflare Pages Functions + D1 · 验证码经真实邮件 / 短信通道送达</p>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const ALL_FEATURES=["core_editor","export_png","batch_render","api_access","priority_support"];
+const FEAT_CN={core_editor:"核心编辑",export_png:"PNG 导出",batch_render:"批量渲染",api_access:"API 接入",priority_support:"优先支持"};
+let ME=null;
+
+async function api(path,body,method){
+  const r=await fetch(path,{method:method||(body?'POST':'GET'),headers:{'content-type':'application/json'},credentials:'same-origin',body:body?JSON.stringify(body):undefined});
+  const d=await r.json().catch(()=>({ok:false,error:'服务响应异常'}));
+  if(!r.ok||d.ok===false) throw new Error(d.error||('HTTP '+r.status));
+  return d;
+}
+function show(id,text,cls){const el=$(id);el.textContent=text;el.className='msg show '+(cls||'err');}
+function hid(id){$(id).className='msg';}
+
+function mode(m){
+  const reg=m==='reg';
+  $('regForm').className=reg?'':'hide'; $('logForm').className=reg?'hide':'';
+  $('tb1').className=reg?'on':''; $('tb2').className=reg?'':'on'; hid('authMsg');
+}
+
+async function sendCode(scene,tid,cid){
+  const target=$(tid).value.trim(); if(!target) return show('authMsg','请先填写邮箱或手机号');
+  const btn=$(scene==='register'?'r_send':'l_send'); btn.disabled=true;
+  try{
+    const d=await api('/api/otp',{target,scene});
+    if(d.delivered){
+      // 真实投递成功：不显示验证码，只告知去向
+      show('authMsg','验证码已发送至 '+d.masked_target+'，'+(d.ttlMinutes||5)+' 分钟内有效，请查收（含垃圾箱）','ok');
+      $(cid).focus();
+    }else if(d.devCode){
+      // 通道未配置且处于联调模式：如实告知这是回显，不是真实送达
+      $(cid).value=d.devCode;
+      show('authMsg','未配置发送通道，当前为联调回显：'+d.devCode+'。配置邮件/短信通道后即为真实发送。','warn');
+    }else{
+      show('authMsg','发送未完成，请稍后重试');
+    }
+    let s=60;btn.textContent=s+'s 后重发';
+    const t=setInterval(()=>{s--;btn.textContent=s+'s 后重发';if(s<=0){clearInterval(t);btn.disabled=false;btn.textContent='获取验证码';}},1000);
+  }catch(e){btn.disabled=false;btn.textContent='获取验证码';show('authMsg',e.message);}
+}
+
+async function doRegister(){
+  try{
+    await api('/api/register',{account:$('r_account').value.trim(),password:$('r_pwd').value,email:/@/.test($('r_target').value.trim())?$('r_target').value.trim():'',phone:/@/.test($('r_target').value.trim())?'':$('r_target').value.trim(),code:$('r_code').value.trim()});
+    enter();
+  }catch(e){show('authMsg',e.message);}
+}
+async function doLogin(){
+  try{
+    await api('/api/login',{identifier:$('l_id').value.trim(),password:$('l_pwd').value,code:$('l_code').value.trim()});
+    enter();
+  }catch(e){show('authMsg',e.message);}
+}
+async function logout(){try{await api('/api/logout',{});}catch(e){} location.reload();}
+
+function deviceId(){let d=localStorage.getItem('demo_device_id');if(!d){d='dev-'+crypto.randomUUID().slice(0,12);localStorage.setItem('demo_device_id',d);}return d;}
+
+async function enter(){
+  ME=await api('/api/me');
+  $('auth').classList.add('hide');$('app').classList.remove('hide');$('hright').classList.remove('hide');
+  const u=ME.user,l=ME.license||{},c=ME.checkout||{};
+  $('huser').textContent=u.account;
+  renderAvatar(u.avatar, u.account);
+  $('u_id').textContent=u.id;$('u_acc').textContent=u.account;
+  $('u_email').textContent=u.email||'未绑定';$('u_phone').textContent=u.phone||'未绑定';
+  $('planTag').textContent=l.plan_label||'普通版';$('planTag').className='tag '+(l.plan||'basic');
+  $('licKey').textContent=l.license_key||'—';
+  const used=(ME.usage||{}).used||0,seats=(ME.usage||{}).seats||1;
+  $('seatTxt').textContent=used+' / '+seats;
+  $('seatBar').style.width=Math.min(100,used/seats*100)+'%';
+  $('featList').innerHTML=ALL_FEATURES.map(f=>{const on=(l.features||[]).includes(f);return '<span class="'+(on?'on':'off')+'">'+(FEAT_CN[f]||f)+'</span>';}).join('');
+  $('planBasic').className='plan'+(l.plan!=='pro'?' cur':'');
+  $('planPro').className='plan'+(l.plan==='pro'?' cur':'');
+  $('devId').textContent=deviceId();
+  $('btnMock').classList.toggle('hide',!(l.plan!=='pro'&&c.mock_available));
+  $('devList').innerHTML=(ME.devices||[]).map(d=>'<li><span>'+d.device_name+'<br><b style="color:var(--mut);font-weight:400;font-size:12px">'+d.device_id+(d.expired?' · 长期未活动':'')+'</b></span>'+(d.device_id===deviceId()?'<span class="tag basic">本机</span>':'')+'</li>').join('')||'<li style="color:var(--mut)">暂无激活设备</li>';
+  if(l.plan!=='pro'&&!c.pro_url&&!c.note) {}
+  loadMemos();
+}
+
+function copyKey(){navigator.clipboard.writeText($('licKey').textContent).then(()=>show('upMsg','已复制到剪贴板','ok'));}
+
+let MEMOS=[],editingMemoId=null;
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtTime(t){return new Date(t).toLocaleString('zh-CN',{hour12:false});}
+async function loadMemos(){
+  try{const d=await api('/api/memos');MEMOS=d.memos||[];renderMemos();}
+  catch(e){show('memoMsg',e.message);}
+}
+function renderMemos(){
+  const el=$('memoList');
+  if(!MEMOS.length){el.innerHTML='<li style="color:var(--mut)">还没有备忘录，写一条吧</li>';return;}
+  el.innerHTML=MEMOS.map(m=>'<li><div style="flex:1;min-width:0"><div>'+esc(m.title||'无标题')+'</div><div style="color:var(--mut);font-size:12.5px;margin-top:3px;white-space:pre-wrap;word-break:break-word">'+esc(m.content)+'</div><div style="color:var(--mut);font-size:11.5px;margin-top:5px">'+fmtTime(m.updated_at)+'</div></div><div class="row" style="gap:6px;flex-shrink:0"><button class="gh sm" data-edit="'+m.id+'">编辑</button><button class="gh sm" data-del="'+m.id+'">删除</button></div></li>').join('');
+}
+function startEdit(m){editingMemoId=m.id;$('m_title').value=m.title||'';$('m_content').value=m.content||'';$('m_save').textContent='更新';$('m_cancel').style.display='';$('m_title').focus();}
+function cancelEdit(){editingMemoId=null;$('m_title').value='';$('m_content').value='';$('m_save').textContent='保存';$('m_cancel').style.display='none';}
+async function saveMemo(){
+  const title=$('m_title').value.trim(),content=$('m_content').value.trim();
+  if(!content){show('memoMsg','内容不能为空');return;}
+  try{
+    if(editingMemoId){await api('/api/memos',{id:editingMemoId,title,content},'PUT');}
+    else{await api('/api/memos',{title,content});}
+    cancelEdit();await loadMemos();show('memoMsg','已保存','ok');
+  }catch(e){show('memoMsg',e.message);}
+}
+async function delMemo(id){
+  if(!confirm('删除这条备忘录？'))return;
+  try{await api('/api/memos?id='+encodeURIComponent(id),null,'DELETE');await loadMemos();show('memoMsg','已删除','ok');}
+  catch(e){show('memoMsg',e.message);}
+}
+$('memoList').addEventListener('click',e=>{
+  const t=e.target;if(!t||!t.getAttribute)return;
+  const id=t.getAttribute('data-edit')||t.getAttribute('data-del');
+  if(!id)return;
+  if(t.getAttribute('data-del')!==null){delMemo(id);return;}
+  const m=MEMOS.find(x=>x.id===id);if(m)startEdit(m);
+});
+
+const PRESETS=[
+  {emoji:"🦊",bg:"#ff8a5c"},
+  {emoji:"🐼",bg:"#7c9ff0"},
+  {emoji:"🐯",bg:"#f5b942"},
+  {emoji:"🦄",bg:"#c678dd"},
+  {emoji:"🤖",bg:"#56c9a8"},
+];
+let pendingAvatar=null;
+function colorFor(s){let h=0;s=String(s||'');for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return 'hsl('+(h%360)+',55%,55%)';}
+function avatarInner(avatar,account,size){
+  size=size||28;
+  const base='width:'+size+'px;height:'+size+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+Math.round(size*0.5)+'px;flex-shrink:0;';
+  if(avatar&&avatar.indexOf('img:')===0){
+    return '<img src="'+avatar.slice(4)+'" style="width:'+size+'px;height:'+size+'px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0">';
+  }
+  if(avatar&&avatar.indexOf('preset:')===0){
+    const i=parseInt(avatar.slice(7),10);
+    const p=PRESETS[i]||PRESETS[0];
+    return '<span style="'+base+'background:'+p.bg+'">'+p.emoji+'</span>';
+  }
+  return '<span style="'+base+'background:'+colorFor(account)+'">'+esc((account||'?').slice(0,1).toUpperCase())+'</span>';
+}
+function renderAvatar(avatar,account){
+  $('havatar').innerHTML=avatarInner(avatar,account,26);
+  $('u_avatar').innerHTML=avatarInner(avatar,account,56);
+}
+function openAvatar(){
+  pendingAvatar=(ME.user&&ME.user.avatar)||null;
+  $('avatarPanel').classList.remove('hide');
+  renderPresets();
+}
+function renderPresets(){
+  $('presetList').innerHTML=PRESETS.map((p,i)=>
+    '<button type="button" class="gh sm" data-p="'+i+'" style="width:52px;height:52px;border-radius:50%;font-size:24px;background:'+p.bg+';border:2px solid '+(pendingAvatar==='preset:'+i?'var(--pri)':'transparent')+'">'+p.emoji+'</button>'
+  ).join('');
+}
+$('presetList').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-p]');if(!b)return;
+  pendingAvatar='preset:'+b.getAttribute('data-p');
+  renderPresets();
+});
+function pickUpload(){$('avatarFile').click();}
+function onAvatarFile(input){
+  const f=input.files&&input.files[0];if(!f)return;
+  if(!/^image\//.test(f.type)){show('avatarMsg','请选择图片文件');return;}
+  compressImage(f).then(url=>{
+    pendingAvatar='img:'+url;
+    $('u_avatar').innerHTML=avatarInner(pendingAvatar,(ME.user&&ME.user.account)||'',56);
+    show('avatarMsg','已选择图片，点「保存」生效','ok');
+  }).catch(()=>show('avatarMsg','图片读取失败'));
+  input.value='';
+}
+function compressImage(file){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=()=>{const img=new Image();img.onload=()=>{const S=128,c=document.createElement('canvas');c.width=S;c.height=S;const x=c.getContext('2d');const m=Math.max(img.width,img.height),w=S*img.width/m,h=S*img.height/m;x.drawImage(img,(S-w)/2,(S-h)/2,w,h);res(c.toDataURL('image/jpeg',0.85));};img.onerror=rej;img.src=fr.result;};
+    fr.onerror=rej;
+    fr.readAsDataURL(file);
+  });
+}
+async function saveAvatar(){
+  if(!pendingAvatar){show('avatarMsg','请先选择一个头像');return;}
+  try{
+    const d=await api('/api/avatar',{avatar:pendingAvatar});
+    ME.user.avatar=d.avatar;
+    renderAvatar(d.avatar,ME.user.account);
+    $('avatarPanel').classList.add('hide');
+    show('avatarMsg','头像已更新','ok');
+  }catch(e){show('avatarMsg',e.message);}
+}
+
+async function upgrade(){
+  hid('upMsg');
+  try{
+    const d=await api('/api/upgrade');
+    if(d.already_pro) return show('upMsg','当前已是专业版','ok');
+    if(d.checkout_url){show('upMsg','即将跳转支付…','ok');setTimeout(()=>location.href=d.checkout_url,600);}
+    else show('upMsg',d.note||'未配置支付入口，可用「模拟付款」体验自动开通');
+  }catch(e){show('upMsg',e.message);}
+}
+async function mockPay(){
+  hid('upMsg');show('upMsg','正在处理付款回调…','ok');
+  try{await api('/api/upgrade',{mock:true});await enter();show('upMsg','付款成功，专业版已自动开通（3 席位）','ok');}
+  catch(e){show('upMsg',e.message);}
+}
+async function actDevice(action){
+  hid('devMsg');
+  try{
+    const d=await api('/api/license',{action,device_id:deviceId(),device_name:navigator.platform||'本机设备'});
+    await enter();
+    const m={activate:'本机激活成功',verify:'授权校验通过，本机可用',deactivate:'本机已解绑，席位已释放'};
+    show('devMsg',m[action]||'操作成功','ok');
+  }catch(e){show('devMsg',e.message);}
+}
+
+(async()=>{try{const d=await api('/api/me');ME=d;enter();}catch(e){$('auth').classList.remove('hide');}})();
+</script>
+</body>
+</html>
