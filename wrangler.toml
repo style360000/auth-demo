@@ -2,6 +2,10 @@ name = "auth-demo"
 compatibility_date = "2026-11-01"
 pages_build_output_dir = "public"
 compatibility_flags = ["nodejs_compat"]
+[[d1_databases]]
+  binding = "DB"
+  database_name = "auth-demo"
+  database_id = "859ac425-2d90-4893-b520-36e8f38a54c2"
 
 # ============================================================
 #  部署配置说明（重要）
@@ -21,5 +25,6 @@ compatibility_flags = ["nodejs_compat"]
 #   BREVO_API_KEY     = 从 .dev.vars 复制
 #   MAIL_FROM         = stylex666666@gmail.com
 #   MAIL_FROM_NAME    = 授权平台
+
 #
 # 注：本文件不再包含 [[d1_databases]] 假 ID 和 [vars]，避免线上误用。
